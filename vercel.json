@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "echo Skipping install - using committed dist",
+  "buildCommand": "echo Skipping build - using committed dist",
+  "outputDirectory": "dist"
+}
