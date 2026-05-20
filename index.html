@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RB Prism — AI Experience Insights</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@500;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#07111F;
+  --navy2:#0C1A2E;
+  --navy3:#0F2040;
+  --blue:#1A3A6B;
+  --rb-red:#E8001D;
+  --rb-red-dim:rgba(232,0,29,0.12);
+  --rb-red-border:rgba(232,0,29,0.3);
+  --amber:#F5A623;
+  --amber-dim:rgba(245,166,35,0.12);
+  --teal:#00C9A7;
+  --teal-dim:rgba(0,201,167,0.1);
+  --jira:#0052CC;
+  --text:#E2E8F0;
+  --text-2:#8A93A8;
+  --text-3:#475569;
+  --border:rgba(255,255,255,0.07);
+  --border-2:rgba(255,255,255,0.12);
+  --surface:rgba(255,255,255,0.04);
+  --surface-2:rgba(255,255,255,0.07);
+}
+html,body{height:100%;background:var(--navy);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;overflow-x:hidden}
+
+/* ── LAYOUT ── */
+.app{display:grid;grid-template-rows:auto auto auto 1fr;height:100vh;min-height:600px}
+.header{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);background:var(--navy);padding:0 20px;height:48px;flex-shrink:0}
+.scope-bar{display:flex;align-items:center;gap:6px;padding:8px 20px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.01);flex-wrap:wrap;flex-shrink:0}
+.summary-bar{padding:14px 20px 12px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(15,32,64,0.8) 0%,rgba(7,17,31,0) 70%);flex-shrink:0}
+.body{display:grid;grid-template-columns:240px 1fr;flex:1;overflow:hidden;min-height:0}
+
+/* ── HEADER ── */
+.brand{display:flex;align-items:center;gap:9px;margin-right:32px}
+.rb-badge{background:var(--rb-red);color:#fff;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.05em;padding:3px 8px;border-radius:4px}
+.brand-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.01em}
+.main-nav{display:flex;gap:1px;flex:1}
+.nav-item{padding:0 14px;height:48px;display:flex;align-items:center;font-size:12px;font-weight:500;color:var(--text-2);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'Inter',sans-serif}
+.nav-item:hover{color:var(--text)}
+.nav-item.active{color:#fff;border-bottom-color:var(--rb-red)}
+.header-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.ask-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:6px;background:rgba(232,0,29,0.1);border:0.5px solid var(--rb-red-border);color:#F87171;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:'Inter',sans-serif;white-space:nowrap}
+.ask-btn:hover{background:rgba(232,0,29,0.18);border-color:rgba(232,0,29,0.5)}
+.freshness{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3)}
+.fresh-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* ── SCOPE BAR ── */
+.scope-chip{display:flex;align-items:center;gap:4px;background:var(--surface);border:0.5px solid var(--border-2);border-radius:5px;padding:3px 9px;font-size:11px;cursor:pointer;transition:all 0.12s;color:var(--text-2)}
+.scope-chip:hover{background:var(--surface-2)}
+.scope-chip.active{border-color:rgba(245,166,35,0.4);background:rgba(245,166,35,0.07)}
+.scope-chip.active .sv{color:var(--amber)}
+.sk{color:var(--text-3);font-size:10px}
+.sv{font-weight:500;color:var(--text)}
+.scope-sep{color:var(--border-2);font-size:13px}
+.scope-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+
+/* ── SUMMARY BAR ── */
+.summary-headline{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:#fff;margin-bottom:10px}
+.summary-headline em{font-style:normal;color:var(--amber)}
+.kpis{display:flex;gap:20px}
+.kpi-item{text-align:left}
+.kpi-n{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;line-height:1}
+.kpi-n.red{color:#F87171}
+.kpi-n.amber{color:var(--amber)}
+.kpi-n.teal{color:var(--teal)}
+.kpi-n.muted{color:var(--text-2)}
+.kpi-l{font-size:10px;color:var(--text-3);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em}
+
+/* ── RANK LIST ── */
+.rank-col{border-right:1px solid var(--border);overflow-y:auto;background:var(--navy)}
+.rank-header{padding:10px 14px 6px;font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3)}
+.rank-item{padding:10px 14px;cursor:pointer;border-left:2px solid transparent;transition:all 0.12s;position:relative}
+.rank-item:hover{background:var(--surface)}
+.rank-item.active{background:rgba(232,0,29,0.06);border-left-color:var(--rb-red)}
+.rank-item.active .r-title{color:#fff}
+.ri-top{display:flex;gap:8px;align-items:flex-start}
+.r-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3);min-width:14px;margin-top:2px}
+.r-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;flex:1}
+.ri-meta{display:flex;align-items:center;gap:6px;margin-top:5px;padding-left:22px}
+.sev{font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;letter-spacing:0.04em}
+.sev.c{background:rgba(232,0,29,0.18);color:#F87171}
+.sev.h{background:rgba(245,166,35,0.16);color:#FCD34D}
+.sev.m{background:rgba(0,201,167,0.12);color:var(--teal)}
+.r-plat{font-size:10px;color:var(--text-3)}
+.r-score{margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;font-weight:500}
+.r-score.high{color:#F87171}
+.r-score.med{color:var(--amber)}
+.r-score.low{color:var(--teal)}
+
+/* ── DETAIL PANE ── */
+.detail-col{overflow-y:auto;padding:20px;background:var(--navy2)}
+.d-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:600;color:#fff;margin-bottom:8px;line-height:1.3}
+.d-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.d-chip{font-size:10px;padding:2px 8px;border-radius:4px;border:0.5px solid var(--border-2);color:var(--text-2)}
+.d-chip.c{background:rgba(232,0,29,0.1);border-color:rgba(232,0,29,0.3);color:#F87171}
+.metrics-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.metric-card{background:var(--surface);border-radius:7px;padding:10px 12px}
+.m-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;line-height:1}
+.m-val.r{color:#F87171}
+.m-val.a{color:var(--amber)}
+.m-val.t{color:var(--teal)}
+.m-lbl{font-size:10px;color:var(--text-3);margin-top:3px;letter-spacing:0.04em}
+.d-section{margin-bottom:16px}
+.d-label{font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.d-text{font-size:12px;color:var(--text);line-height:1.6}
+.ev-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}
+.ev-src{font-size:9px;padding:2px 7px;border-radius:3px;background:var(--surface-2);color:var(--text-2);white-space:nowrap;flex-shrink:0;margin-top:2px}
+.ev-text{font-size:12px;color:var(--text);line-height:1.5}
+.action-item{display:flex;gap:9px;margin-bottom:7px;align-items:flex-start}
+.a-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--rb-red);font-weight:500;min-width:16px;margin-top:1px}
+.a-text{font-size:12px;color:var(--text);line-height:1.5}
+.jira-footer{border-top:1px solid var(--border);margin-top:20px;padding-top:16px;display:flex;align-items:center;gap:10px}
+.jira-btn{display:flex;align-items:center;gap:7px;padding:8px 18px;border-radius:7px;background:rgba(0,82,204,0.18);border:0.5px solid rgba(0,82,204,0.4);color:#60A5FA;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:'Inter',sans-serif}
+.jira-btn:hover{background:rgba(0,82,204,0.3);border-color:rgba(0,82,204,0.7)}
+.jira-btn:active{transform:scale(0.97)}
+.jira-toast{font-size:11px;color:var(--teal);opacity:0;transition:opacity 0.25s;display:flex;align-items:center;gap:5px}
+.jira-toast.show{opacity:1}
+
+/* ── HEATMAP ── */
+.heatmap-wrap{padding:20px;overflow-y:auto;background:var(--navy2)}
+.h2-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;color:#fff;margin-bottom:4px}
+.h2-sub{font-size:12px;color:var(--text-2);margin-bottom:20px}
+.heatmap-grid{overflow-x:auto}
+.hm-table{border-collapse:separate;border-spacing:3px;min-width:500px}
+.hm-th{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;padding:4px 8px;text-align:center;font-weight:500;white-space:nowrap}
+.hm-td-label{font-size:11px;color:var(--text-2);padding:4px 10px 4px 0;white-space:nowrap;font-weight:500}
+.hm-cell{width:72px;height:44px;border-radius:5px;cursor:pointer;position:relative;transition:all 0.15s;border:0.5px solid transparent}
+.hm-cell:hover{transform:scale(1.06);z-index:2}
+.hm-cell .cv{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;font-weight:500}
+.risk-5{background:rgba(232,0,29,0.75);border-color:rgba(232,0,29,0.9)}
+.risk-4{background:rgba(245,166,35,0.65);border-color:rgba(245,166,35,0.8)}
+.risk-3{background:rgba(245,166,35,0.3);border-color:rgba(245,166,35,0.45)}
+.risk-2{background:rgba(0,201,167,0.2);border-color:rgba(0,201,167,0.35)}
+.risk-1{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1)}
+.risk-5 .cv,.risk-4 .cv{color:#fff}
+.risk-3 .cv{color:var(--amber)}
+.risk-2 .cv{color:var(--teal)}
+.risk-1 .cv{color:var(--text-3)}
+.hm-legend{display:flex;align-items:center;gap:16px;margin-top:16px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2)}
+.leg-swatch{width:12px;height:12px;border-radius:3px}
+
+/* ── EVIDENCE TAB ── */
+.evidence-wrap{padding:20px;overflow-y:auto;background:var(--navy2)}
+.source-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:20px}
+.source-card{background:var(--surface);border:0.5px solid var(--border-2);border-radius:10px;padding:14px 16px}
+.sc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sc-title{font-size:13px;font-weight:500;color:#fff;display:flex;align-items:center;gap:7px}
+.sc-badge{font-size:10px;padding:2px 8px;border-radius:12px;font-weight:500}
+.sc-badge.active{background:var(--teal-dim);color:var(--teal)}
+.sc-badge.warn{background:var(--amber-dim);color:var(--amber)}
+.sc-count{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:#fff;margin-bottom:2px}
+.sc-sub{font-size:11px;color:var(--text-3)}
+.sc-bar{height:3px;border-radius:2px;margin-top:10px;background:var(--surface-2)}
+.sc-fill{height:100%;border-radius:2px;transition:width 0.8s ease}
+.signal-feed{background:var(--surface);border:0.5px solid var(--border-2);border-radius:10px;padding:14px 16px}
+.feed-item{padding:10px 0;border-bottom:0.5px solid var(--border);display:flex;gap:12px;align-items:flex-start}
+.feed-item:last-child{border-bottom:none;padding-bottom:0}
+.feed-src{font-size:9px;padding:2px 7px;border-radius:3px;background:var(--surface-2);color:var(--text-2);white-space:nowrap;flex-shrink:0;margin-top:1px}
+.feed-content{flex:1}
+.feed-text{font-size:12px;color:var(--text);line-height:1.5;margin-bottom:3px}
+.feed-meta{font-size:10px;color:var(--text-3)}
+
+/* ── ASK PRISM ── */
+.ask-wrap{padding:20px;overflow-y:auto;background:var(--navy2);display:flex;flex-direction:column;height:100%}
+.ask-history{flex:1;margin-bottom:16px;display:flex;flex-direction:column;gap:12px}
+.ask-msg{max-width:90%}
+.ask-msg.user{align-self:flex-end}
+.ask-msg.ai{align-self:flex-start}
+.msg-bubble{padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.6}
+.ask-msg.user .msg-bubble{background:var(--rb-red-dim);border:0.5px solid var(--rb-red-border);color:var(--text);border-radius:10px 10px 2px 10px}
+.ask-msg.ai .msg-bubble{background:var(--surface);border:0.5px solid var(--border-2);color:var(--text);border-radius:10px 10px 10px 2px}
+.msg-meta{font-size:10px;color:var(--text-3);margin-top:4px;padding:0 4px}
+.ask-input-row{display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
+.ask-input{flex:1;background:var(--surface);border:0.5px solid var(--border-2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text);font-family:'Inter',sans-serif;resize:none;min-height:44px;max-height:120px;transition:border-color 0.15s;outline:none}
+.ask-input:focus{border-color:rgba(232,0,29,0.4)}
+.ask-send{padding:10px 16px;background:var(--rb-red);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;flex-shrink:0}
+.ask-send:hover{background:#c9001a}
+.ask-send:active{transform:scale(0.97)}
+.suggested-qs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.sq-btn{font-size:11px;padding:5px 11px;border-radius:20px;background:var(--surface);border:0.5px solid var(--border-2);color:var(--text-2);cursor:pointer;transition:all 0.12s;font-family:'Inter',sans-serif}
+.sq-btn:hover{background:var(--surface-2);color:var(--text)}
+
+/* ── BRIEFS ── */
+.briefs-wrap{padding:20px;overflow-y:auto;background:var(--navy2)}
+.brief-card{background:var(--surface);border:0.5px solid var(--border-2);border-radius:10px;padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.12s}
+.brief-card:hover{background:var(--surface-2);border-color:rgba(255,255,255,0.18)}
+.bc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.bc-title{font-size:13px;font-weight:500;color:#fff;line-height:1.4}
+.bc-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.bc-chip{font-size:10px;padding:2px 7px;border-radius:3px;background:var(--surface-2);color:var(--text-2);border:0.5px solid var(--border)}
+.bc-preview{font-size:12px;color:var(--text-2);line-height:1.5;margin-bottom:10px}
+.bc-footer{display:flex;align-items:center;gap:10px}
+.bc-date{font-size:11px;color:var(--text-3)}
+.bc-jira{display:flex;align-items:center;gap:6px;font-size:11px;color:#60A5FA;padding:5px 10px;border-radius:5px;background:rgba(0,82,204,0.12);border:0.5px solid rgba(0,82,204,0.3);cursor:pointer;transition:all 0.12s;font-family:'Inter',sans-serif}
+.bc-jira:hover{background:rgba(0,82,204,0.22)}
+
+/* ── FULL-WIDTH TABS ── */
+.full-panel{display:none;height:100%;overflow:hidden}
+.full-panel.active{display:block}
+.split-panel{display:none;height:100%;overflow:hidden}
+.split-panel.active{display:grid;grid-template-columns:240px 1fr}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:2px}
+
+/* ── TOOLTIP ── */
+.tooltip{position:absolute;background:#1E3350;border:0.5px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:11px;color:var(--text);pointer-events:none;z-index:100;white-space:nowrap;opacity:0;transition:opacity 0.15s}
+.tooltip.show{opacity:1}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.rank-item,.detail-col>*,.evidence-wrap>*,.heatmap-wrap>*{animation:fadeIn 0.2s ease both}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="brand">
+      <div class="rb-badge">RB</div>
+      <div class="brand-name">Prism</div>
+    </div>
+    <nav class="main-nav">
+      <button class="nav-item active" onclick="switchTab('fixes')">Fixes</button>
+      <button class="nav-item" onclick="switchTab('evidence')">Evidence</button>
+      <button class="nav-item" onclick="switchTab('heatmap')">Heatmap</button>
+      <button class="nav-item" onclick="switchTab('ask')">Ask Prism</button>
+      <button class="nav-item" onclick="switchTab('briefs')">Briefs</button>
+    </nav>
+    <div class="header-actions">
+      <div class="freshness"><span class="fresh-dot"></span>Updated 4h ago</div>
+      <button class="ask-btn" onclick="switchTab('ask')">Ask Prism ↗</button>
+    </div>
+  </header>
+
+  <!-- SCOPE BAR -->
+  <div class="scope-bar">
+    <div class="scope-chip active"><span class="sk">product</span><span class="sv">Red Bull TV</span></div>
+    <span class="scope-sep">›</span>
+    <div class="scope-chip active"><span class="sk">platform</span><span class="sv">iOS</span></div>
+    <span class="scope-sep">›</span>
+    <div class="scope-chip"><span class="sk">version</span><span class="sv">v2.1</span></div>
+    <span class="scope-sep">›</span>
+    <div class="scope-chip"><span class="sk">content</span><span class="sv">All</span></div>
+    <div class="scope-chip"><span class="sk">window</span><span class="sv">30 days</span></div>
+    <div class="scope-right">
+      <div class="scope-chip"><span class="sk">sources</span><span class="sv">5 active</span></div>
+    </div>
+  </div>
+
+  <!-- SUMMARY BAR -->
+  <div class="summary-bar">
+    <div class="summary-headline">What should the <em>RBTV iOS</em> PM fix next?</div>
+    <div class="kpis">
+      <div class="kpi-item"><div class="kpi-n red">3</div><div class="kpi-l">Critical</div></div>
+      <div class="kpi-item"><div class="kpi-n amber">6</div><div class="kpi-l">High priority</div></div>
+      <div class="kpi-item"><div class="kpi-n teal">12</div><div class="kpi-l">Signals</div></div>
+      <div class="kpi-item"><div class="kpi-n muted">47</div><div class="kpi-l">Evidence items</div></div>
+    </div>
+  </div>
+
+  <!-- MAIN BODY -->
+  <main class="body" id="main-body">
+
+    <!-- FIXES TAB (split) -->
+    <div class="split-panel active" id="tab-fixes">
+
+      <!-- RANK LIST -->
+      <div class="rank-col">
+        <div class="rank-header">Ranked fixes</div>
+        <div id="rank-list"></div>
+      </div>
+
+      <!-- DETAIL PANE -->
+      <div class="detail-col" id="detail-pane"></div>
+
+    </div>
+
+    <!-- EVIDENCE TAB -->
+    <div class="full-panel" id="tab-evidence">
+      <div class="evidence-wrap">
+        <div class="h2-title">Signal inventory</div>
+        <div class="h2-sub">Coverage and confidence across all active sources — RBTV iOS · v2.1 · 30 days</div>
+        <div class="source-grid">
+          <div class="source-card">
+            <div class="sc-header"><div class="sc-title">📱 App Store</div><div class="sc-badge active">Active</div></div>
+            <div class="sc-count">41</div><div class="sc-sub">reviews ingested (30 days)</div>
+            <div class="sc-bar"><div class="sc-fill" style="width:82%;background:var(--rb-red)"></div></div>
+          </div>
+          <div class="source-card">
+            <div class="sc-header"><div class="sc-title">💬 Reddit</div><div class="sc-badge active">Active</div></div>
+            <div class="sc-count">23</div><div class="sc-sub">threads matched</div>
+            <div class="sc-bar"><div class="sc-fill" style="width:46%;background:var(--amber)"></div></div>
+          </div>
+          <div class="source-card">
+            <div class="sc-header"><div class="sc-title">📊 Behavior</div><div class="sc-badge active">Active</div></div>
+            <div class="sc-count">1.2M</div><div class="sc-sub">sessions analyzed</div>
+            <div class="sc-bar"><div class="sc-fill" style="width:100%;background:var(--teal)"></div></div>
+          </div>
+          <div class="source-card">
+            <div class="sc-header"><div class="sc-title">🐦 X/Social</div><div class="sc-badge warn">Low coverage</div></div>
+            <div class="sc-count">8</div><div class="sc-sub">mentions matched</div>
+            <div class="sc-bar"><div class="sc-fill" style="width:16%;background:var(--amber)"></div></div>
+          </div>
+          <div class="source-card">
+            <div class="sc-header"><div class="sc-title">📋 Surveys</div><div class="sc-badge active">Active</div></div>
+            <div class="sc-count">312</div><div class="sc-sub">responses (Q1 2025)</div>
+            <div class="sc-bar"><div class="sc-fill" style="width:62%;background:#60A5FA"></div></div>
+          </div>
+        </div>
+        <div class="d-label" style="margin-bottom:12px">Recent signals</div>
+        <div class="signal-feed">
+          <div class="feed-item">
+            <div class="feed-src">App Store</div>
+            <div class="feed-content">
+              <div class="feed-text">"Completely drops out every time I switch from WiFi to data. 1 star until fixed."</div>
+              <div class="feed-meta">3 days ago · 1★ · iPhone 15 Pro, iOS 17.3</div>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-src">Reddit</div>
+            <div class="feed-content">
+              <div class="feed-text">r/redbull thread: "RBTV app keeps crashing mid-stream when I leave WiFi range" — 340 upvotes, 47 comments</div>
+              <div class="feed-meta">5 days ago · r/redbull · 340 upvotes</div>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-src">Behavior</div>
+            <div class="feed-content">
+              <div class="feed-text">Session abandonment spike detected on live content: 4.2× baseline rate. Correlated with network transition events (5G→WiFi).</div>
+              <div class="feed-meta">Behavior signal · 30-day window · High confidence</div>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-src">Surveys</div>
+            <div class="feed-content">
+              <div class="feed-text">38% of churned users cited "loses my place" as a top frustration in exit survey. Second only to "app crashes" (44%).</div>
+              <div class="feed-meta">Q1 2025 exit survey · n=312</div>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="feed-src">App Store</div>
+            <div class="feed-content">
+              <div class="feed-text">"I don't understand why I can never find the Rallycross content — had to Google that RBTV even has it."</div>
+              <div class="feed-meta">7 days ago · 2★ · Discovery feedback</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEATMAP TAB -->
+    <div class="full-panel" id="tab-heatmap">
+      <div class="heatmap-wrap" style="position:relative">
+        <div class="h2-title">Platform × content risk heatmap</div>
+        <div class="h2-sub">Signal concentration by platform and content type. Cell score = weighted risk index (1–5).</div>
+        <div class="heatmap-grid">
+          <table class="hm-table">
+            <thead>
+              <tr>
+                <th class="hm-th" style="text-align:left;padding-left:0">Platform</th>
+                <th class="hm-th">Live Events</th>
+                <th class="hm-th">Replays</th>
+                <th class="hm-th">Rallycross</th>
+                <th class="hm-th">Documentaries</th>
+                <th class="hm-th">Football WC</th>
+              </tr>
+            </thead>
+            <tbody id="hm-body"></tbody>
+          </table>
+        </div>
+        <div class="hm-legend">
+          <div class="leg-item"><div class="leg-swatch risk-5"></div>Critical (5)</div>
+          <div class="leg-item"><div class="leg-swatch risk-4"></div>High (4)</div>
+          <div class="leg-item"><div class="leg-swatch risk-3"></div>Medium (3)</div>
+          <div class="leg-item"><div class="leg-swatch risk-2"></div>Low (2)</div>
+          <div class="leg-item"><div class="leg-swatch risk-1"></div>Minimal (1)</div>
+        </div>
+        <div class="tooltip" id="hm-tooltip"></div>
+      </div>
+    </div>
+
+    <!-- ASK PRISM TAB -->
+    <div class="full-panel" id="tab-ask">
+      <div class="ask-wrap">
+        <div class="suggested-qs">
+          <button class="sq-btn" onclick="askQuestion('What is driving the App Store rating drop?')">What's driving the rating drop?</button>
+          <button class="sq-btn" onclick="askQuestion('Which platform has the highest churn risk?')">Highest churn risk platform?</button>
+          <button class="sq-btn" onclick="askQuestion('What should the PM focus on this sprint?')">This sprint priority?</button>
+          <button class="sq-btn" onclick="askQuestion('Show me all Rallycross signals')">All Rallycross signals</button>
+        </div>
+        <div class="ask-history" id="ask-history">
+          <div class="ask-msg ai">
+            <div class="msg-bubble">Hi. I'm Prism. I've analyzed 47 signals across 5 sources for <strong>RBTV iOS v2.1</strong> over the last 30 days. Ask me anything about what's happening — or use the suggestions above to get started.</div>
+            <div class="msg-meta">Prism · now</div>
+          </div>
+        </div>
+        <div class="ask-input-row">
+          <textarea class="ask-input" id="ask-input" placeholder="Ask about signals, priorities, root causes…" rows="1" onkeydown="handleAskKey(event)"></textarea>
+          <button class="ask-send" onclick="sendAsk()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BRIEFS TAB -->
+    <div class="full-panel" id="tab-briefs">
+      <div class="briefs-wrap">
+        <div class="h2-title" style="margin-bottom:4px">Generated briefs</div>
+        <div class="h2-sub" style="margin-bottom:20px">Jira-ready tickets generated from ranked PM actions</div>
+        <div id="briefs-list"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const JIRA_URL = 'https://your-org.atlassian.net/jira/software/projects/RBTV/issues/create';
+
+const fixes = [
+  {
+    id:0,title:"Video playback stall on 5G → WiFi handoff",sev:"c",sevLabel:"Critical",plat:"iOS · Live",score:"9.2",scoreClass:"high",
+    chips:["Critical","iOS","v2.1","Live Events"],
+    metrics:{score:"9.2",scoreClass:"r",conf:"High",confClass:"a",trend:"↑ Worsening",trendClass:"t"},
+    why:"Highest frequency complaint across 3 signal sources in the last 14 days. Affects live content during peak audience windows — maximum revenue and retention exposure.",
+    cause:"HLS stream session drops on network transition. No reconnect retry logic implemented. Manifests consistently on iOS 17.2+ devices during live events.",
+    evidence:[
+      {src:"App Store",text:"27 reviews cite mid-stream drop during live sports this month"},
+      {src:"Reddit",text:"Thread with 340 upvotes: 'RBTV always dies when I leave WiFi'"},
+      {src:"Behavior",text:"Session abandonment 4.2× higher on live content vs. VOD"}
+    ],
+    actions:[
+      "Implement HLS reconnect retry with exponential backoff on network transition",
+      "Add network-aware pre-buffer strategy for 5G → WiFi handoff",
+      "Instrument dropout events by network type to establish baseline"
+    ],
+    jiraDesc:`h2. Summary
+HLS stream session drops on iOS when device transitions from 5G to WiFi during live content. No reconnect retry logic in place.
+
+h2. Affected scope
+- Platform: iOS (confirmed iOS 17.2+)
+- Version: v2.1
+- Content type: Live Events
+
+h2. Priority score
+9.2 / 10 — Critical | Trend: Worsening
+
+h2. Root cause
+Network transition drops HLS session. Client does not attempt reconnect. Manifests consistently within 3–8 seconds of handoff.
+
+h2. Evidence
+- App Store: 27 reviews cite mid-stream drops during live sports (30 days)
+- Reddit: Thread with 340 upvotes — "RBTV always dies when I leave WiFi"
+- Behavior: Session abandonment 4.2× higher on live vs. VOD
+
+h2. Recommended actions
+1. Implement HLS reconnect retry with exponential backoff
+2. Add network-aware pre-buffer strategy on 5G handoff
+3. Instrument dropout events by network type for baseline
+
+h2. Generated by
+RB Prism — RBTV · iOS · v2.1 · Last 30 days`
+  },
+  {
+    id:1,title:"Broken resume state after app backgrounding",sev:"c",sevLabel:"Critical",plat:"iOS · All",score:"8.7",scoreClass:"high",
+    chips:["Critical","iOS","v2.1","All content"],
+    metrics:{score:"8.7",scoreClass:"r",conf:"High",confClass:"a",trend:"→ Stable",trendClass:"a"},
+    why:"Second-highest complaint frequency. Affects all content types. Users who experience this churn at 2.8× the baseline rate within 7 days.",
+    cause:"State serialization not persisting to disk on background event. App re-launches from cold start, losing playback position and context on return.",
+    evidence:[
+      {src:"Behavior",text:"61% of backgrounding events result in cold restart rather than resume"},
+      {src:"App Store",text:"14 one-star reviews cite losing watch progress as primary issue"},
+      {src:"Surveys",text:"38% of churned users cited 'loses my place' as a top frustration"}
+    ],
+    actions:[
+      "Persist playback state to disk on applicationWillResignActive",
+      "Restore state on applicationDidBecomeActive before any network call",
+      "A/B test 'continue watching' prompt vs. silent auto-resume"
+    ],
+    jiraDesc:`h2. Summary
+App loses playback position when backgrounded and relaunched. State is not persisted to disk, causing cold restarts.
+
+h2. Affected scope
+- Platform: iOS (all versions in v2.1)
+- Content type: All
+
+h2. Priority score
+8.7 / 10 — Critical | Trend: Stable
+
+h2. Root cause
+State serialization not persisting to disk on background event. App cold-starts on return.
+
+h2. Evidence
+- Behavior: 61% of backgrounding events result in cold restart
+- App Store: 14 one-star reviews cite losing progress
+- Surveys: 38% of churned users cited "loses my place"
+
+h2. Recommended actions
+1. Persist playback state on applicationWillResignActive
+2. Restore state on applicationDidBecomeActive before network calls
+3. A/B test continue-watching prompt vs. silent resume
+
+h2. Generated by
+RB Prism — RBTV · iOS · v2.1 · Last 30 days`
+  },
+  {
+    id:2,title:"Low content discovery — Rallycross VOD underperforming",sev:"h",sevLabel:"High",plat:"iOS · VOD",score:"7.4",scoreClass:"med",
+    chips:["High","iOS","v2.1","Rallycross"],
+    metrics:{score:"7.4",scoreClass:"a",conf:"Medium",confClass:"a",trend:"↓ Improving",trendClass:"t"},
+    why:"Rallycross VOD has 3× higher save-to-watchlist rate vs. view rate, indicating intent but poor discoverability. High-value content category with sponsorship implications.",
+    cause:"Homepage ranking algorithm deprioritizes sports VOD in favor of live content. Search does not surface Rallycross unless exact keyword is used.",
+    evidence:[
+      {src:"Behavior",text:"Rallycross content found via search in only 12% of sessions"},
+      {src:"X/Social",text:"Positive Rallycross sentiment but low RBTV tag correlation"},
+      {src:"App Store",text:"Multiple reviews unaware RBTV carries full Rallycross library"}
+    ],
+    actions:[
+      "Add Rallycross to homepage featured rail with editorial card treatment",
+      "Improve search synonym coverage for motorsport categories",
+      "Test push notification for new Rallycross VOD to engaged segment"
+    ],
+    jiraDesc:`h2. Summary
+Rallycross VOD is underperforming relative to engagement intent signals. Low discoverability via homepage and search.
+
+h2. Affected scope
+- Platform: iOS
+- Version: v2.1
+- Content type: Rallycross VOD
+
+h2. Priority score
+7.4 / 10 — High | Trend: Improving
+
+h2. Root cause
+Homepage algorithm deprioritizes sports VOD. Search requires exact keyword match for Rallycross content.
+
+h2. Evidence
+- Behavior: Rallycross found via search in only 12% of sessions
+- X/Social: Positive sentiment but low RBTV tag correlation
+- App Store: Users unaware of RBTV's full Rallycross library
+
+h2. Recommended actions
+1. Add Rallycross to homepage featured rail
+2. Improve search synonym coverage for motorsport
+3. Test push notification for new Rallycross VOD releases
+
+h2. Generated by
+RB Prism — RBTV · iOS · v2.1 · Last 30 days`
+  },
+  {
+    id:3,title:"App Store rating drop (−0.4) past 30 days",sev:"h",sevLabel:"High",plat:"iOS",score:"7.1",scoreClass:"med",
+    chips:["High","iOS","All versions"],
+    metrics:{score:"7.1",scoreClass:"a",conf:"High",confClass:"a",trend:"↑ Worsening",trendClass:"r"},
+    why:"Rating drop affects App Store placement and organic install rate. Directly tied to playback issues in items 1 and 2 — surface symptom, not root cause.",
+    cause:"Composite of playback stall and resume bugs driving 1-star reviews. Rating decline lags bug introduction by ~10 days based on review timestamps.",
+    evidence:[
+      {src:"App Store",text:"41 new 1-star reviews in 30 days vs. 9 in prior period"},
+      {src:"App Store",text:"89% of 1-star reviews mention playback reliability"},
+      {src:"Behavior",text:"Uninstall rate up 18% month-over-month"}
+    ],
+    actions:[
+      "Prioritize playback fixes (items 1 & 2) as primary lever for rating recovery",
+      "Implement in-app rating prompt after successful live event completion",
+      "Respond to recent 1-star reviews with fix timeline acknowledgement"
+    ],
+    jiraDesc:`h2. Summary
+App Store rating dropped 0.4 points in 30 days, driven by playback reliability complaints.
+
+h2. Affected scope
+- Platform: iOS (all versions)
+
+h2. Priority score
+7.1 / 10 — High | Trend: Worsening
+
+h2. Root cause
+Composite of playback stall and resume bugs. Rating lags bug introduction by ~10 days.
+
+h2. Evidence
+- App Store: 41 new 1-star reviews vs. 9 in prior period
+- App Store: 89% of 1-star reviews cite playback reliability
+- Behavior: Uninstall rate up 18% MoM
+
+h2. Recommended actions
+1. Prioritize playback fixes (items 1 & 2) as primary lever
+2. Implement in-app rating prompt after successful live event
+3. Respond to 1-star reviews with fix timeline
+
+h2. Generated by
+RB Prism — RBTV · iOS · v2.1 · Last 30 days`
+  },
+  {
+    id:4,title:"Seek bar precision issues on 4K content",sev:"m",sevLabel:"Medium",plat:"iOS · 4K",score:"5.8",scoreClass:"low",
+    chips:["Medium","iOS","v2.1","4K content"],
+    metrics:{score:"5.8",scoreClass:"t",conf:"Medium",confClass:"a",trend:"→ Stable",trendClass:"a"},
+    why:"Affects power users watching long-form 4K content. Lower frequency than items 1–4 but notable in high-LTV user segment.",
+    cause:"4K stream seek events use frame-accurate positioning not supported by current player SDK version. Results in 3–8 second seek imprecision on affected content.",
+    evidence:[
+      {src:"Reddit",text:"Power user thread with 89 upvotes on seek accuracy in 4K"},
+      {src:"Behavior",text:"Seek interactions on 4K content 40% lower than non-4K — suggests workaround behavior"},
+      {src:"Surveys",text:"Mentioned by 12% of 4K-enabled users in last satisfaction survey"}
+    ],
+    actions:[
+      "Upgrade player SDK to version supporting frame-accurate 4K seeking",
+      "Add seek preview thumbnails to reduce friction during imprecise seeking",
+      "Log seek delta metrics to quantify true imprecision scope before sprint"
+    ],
+    jiraDesc:`h2. Summary
+Seek bar is imprecise on 4K content due to frame-accurate seeking not being supported in current player SDK.
+
+h2. Affected scope
+- Platform: iOS
+- Version: v2.1
+- Content type: 4K
+
+h2. Priority score
+5.8 / 10 — Medium | Trend: Stable
+
+h2. Root cause
+4K seek uses frame-accurate positioning unsupported by current SDK. Results in 3–8s seek imprecision.
+
+h2. Evidence
+- Reddit: Power user thread with 89 upvotes on seek accuracy
+- Behavior: Seek interactions on 4K content 40% lower than non-4K
+- Surveys: Mentioned by 12% of 4K-enabled users
+
+h2. Recommended actions
+1. Upgrade player SDK for frame-accurate 4K seeking
+2. Add seek preview thumbnails
+3. Log seek delta metrics for scope sizing
+
+h2. Generated by
+RB Prism — RBTV · iOS · v2.1 · Last 30 days`
+  }
+];
+
+const heatmapData = {
+  platforms:['iOS','Android','tvOS','Roku','Web'],
+  contents:['Live Events','Replays','Rallycross','Documentaries','Football WC'],
+  scores:[
+    [5,3,4,2,3],
+    [3,2,3,1,2],
+    [4,2,3,2,3],
+    [2,1,2,1,1],
+    [3,2,3,2,4]
+  ],
+  tooltips:[
+    ['9.2 — playback stall critical','3.1 — minor lag spikes','7.4 — discovery gap','2.0 — stable','3.3 — low signals'],
+    ['3.2 — resume issues','2.1 — minor buffering','2.8 — search gap','1.1 — stable','2.2 — stable'],
+    ['4.1 — stream drops','2.0 — stable','3.0 — auth issues','1.8 — stable','2.9 — stable'],
+    ['2.1 — stable','1.0 — stable','1.8 — stable','1.0 — stable','1.2 — stable'],
+    ['3.1 — seek issues','1.8 — stable','2.7 — discovery','2.1 — stable','3.8 — load times']
+  ]
+};
+
+let currentFix = 0;
+
+function buildRankList() {
+  const el = document.getElementById('rank-list');
+  el.innerHTML = fixes.map((f,i) => `
+    <div class="rank-item${i===0?' active':''}" onclick="selectFix(${i})">
+      <div class="ri-top">
+        <div class="r-num">${i+1}</div>
+        <div class="r-title">${f.title}</div>
+      </div>
+      <div class="ri-meta">
+        <div class="sev ${f.sev}">${f.sevLabel}</div>
+        <div class="r-plat">${f.plat}</div>
+        <div class="r-score ${f.scoreClass}">${f.score}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderDetail(idx) {
+  const f = fixes[idx];
+  return `
+    <div class="d-title">${f.title}</div>
+    <div class="d-chips">${f.chips.map((c,i) => `<div class="d-chip${i===0?' c':''}">${c}</div>`).join('')}</div>
+    <div class="metrics-row">
+      <div class="metric-card"><div class="m-val ${f.metrics.scoreClass}">${f.metrics.score}</div><div class="m-lbl">Priority score</div></div>
+      <div class="metric-card"><div class="m-val ${f.metrics.confClass}">${f.metrics.conf}</div><div class="m-lbl">Confidence</div></div>
+      <div class="metric-card"><div class="m-val ${f.metrics.trendClass}">${f.metrics.trend}</div><div class="m-lbl">Trend</div></div>
+    </div>
+    <div class="d-section">
+      <div class="d-label">Why ranked here</div>
+      <div class="d-text">${f.why}</div>
+    </div>
+    <div class="d-section">
+      <div class="d-label">Likely root cause</div>
+      <div class="d-text">${f.cause}</div>
+    </div>
+    <div class="d-section">
+      <div class="d-label">Evidence by source</div>
+      ${f.evidence.map(e=>`<div class="ev-row"><div class="ev-src">${e.src}</div><div class="ev-text">${e.text}</div></div>`).join('')}
+    </div>
+    <div class="d-section">
+      <div class="d-label">Recommended actions</div>
+      ${f.actions.map((a,i)=>`<div class="action-item"><div class="a-num">${i+1}.</div><div class="a-text">${a}</div></div>`).join('')}
+    </div>
+    <div class="jira-footer">
+      <button class="jira-btn" onclick="jiraClick(${idx})" id="jira-btn-${idx}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11.571 11.429L6.857 6.714A6.286 6.286 0 0117.143 17L11.57 11.429z" fill="#60A5FA"/><path d="M12.429 12.571l4.714 4.715A6.286 6.286 0 016.857 7L12.43 12.57z" fill="#1E40AF"/></svg>
+        Open in Jira
+      </button>
+      <span class="jira-toast" id="jira-toast-${idx}">✓ Copied to clipboard</span>
+    </div>
+  `;
+}
+
+function selectFix(idx) {
+  currentFix = idx;
+  document.querySelectorAll('.rank-item').forEach((el,i) => el.classList.toggle('active', i===idx));
+  document.getElementById('detail-pane').innerHTML = renderDetail(idx);
+}
+
+async function jiraClick(idx) {
+  const f = fixes[idx];
+  const text = `${f.title}\n\n${f.jiraDesc}`;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch(e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='absolute'; ta.style.left='-9999px';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  const toast = document.getElementById(`jira-toast-${idx}`);
+  if (toast) { toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 3000); }
+  setTimeout(() => window.open(JIRA_URL, '_blank'), 200);
+}
+
+function buildHeatmap() {
+  const tbody = document.getElementById('hm-body');
+  tbody.innerHTML = heatmapData.platforms.map((plat,pi) => `
+    <tr>
+      <td class="hm-td-label">${plat}</td>
+      ${heatmapData.contents.map((c,ci) => {
+        const s = heatmapData.scores[pi][ci];
+        const tt = heatmapData.tooltips[pi][ci];
+        return `<td><div class="hm-cell risk-${s}" onmouseenter="showTooltip(event,'${plat} · ${c}: ${tt}')" onmouseleave="hideTooltip()"><div class="cv">${s}</div></div></td>`;
+      }).join('')}
+    </tr>
+  `).join('');
+}
+
+function showTooltip(e, text) {
+  const t = document.getElementById('hm-tooltip');
+  t.textContent = text;
+  t.classList.add('show');
+  t.style.left = (e.pageX - e.target.closest('.heatmap-wrap').getBoundingClientRect().left + 12) + 'px';
+  t.style.top = (e.pageY - e.target.closest('.heatmap-wrap').getBoundingClientRect().top - 36) + 'px';
+}
+function hideTooltip() {
+  document.getElementById('hm-tooltip').classList.remove('show');
+}
+
+function buildBriefs() {
+  const el = document.getElementById('briefs-list');
+  el.innerHTML = fixes.map((f,i) => `
+    <div class="brief-card">
+      <div class="bc-top">
+        <div class="bc-title">${f.title}</div>
+        <div class="sev ${f.sev}" style="flex-shrink:0">${f.sevLabel}</div>
+      </div>
+      <div class="bc-chips">
+        ${f.chips.map(c=>`<div class="bc-chip">${c}</div>`).join('')}
+      </div>
+      <div class="bc-preview">${f.cause}</div>
+      <div class="bc-footer">
+        <span class="bc-date">Generated today · Score ${f.score}</span>
+        <button class="bc-jira" onclick="jiraClickBrief(${i})">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M11.571 11.429L6.857 6.714A6.286 6.286 0 0117.143 17L11.57 11.429z" fill="#60A5FA"/><path d="M12.429 12.571l4.714 4.715A6.286 6.286 0 016.857 7L12.43 12.57z" fill="#1E40AF"/></svg>
+          Open in Jira
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function jiraClickBrief(idx) {
+  await jiraClick(idx);
+}
+
+const aiResponses = {
+  'What is driving the App Store rating drop?': "The rating drop is almost entirely explained by two bugs: the 5G→WiFi playback stall (items #1) and broken resume state (#2). 89% of the 41 new 1-star reviews in the last 30 days mention playback reliability. Fix those two issues and the rating should recover within 2–3 weeks as the review cohort turns over.",
+  'Which platform has the highest churn risk?': "iOS is the highest churn risk platform right now — it has the most active signal coverage and the worst playback reliability profile. The 5G→WiFi stall is iOS-specific (confirmed iOS 17.2+). tvOS is second due to stream drop issues on live events. Android is comparatively clean at the moment.",
+  'What should the PM focus on this sprint?': "One sprint, one answer: fix the HLS reconnect logic (#1). It's the highest-scoring issue, it's worsening, and it directly causes the App Store rating drop you're seeing. If you can ship the reconnect retry with backoff this sprint, you address items #1 and #4 on the list simultaneously. Item #2 (resume state) is a fast follow — two related fixes, one sprint.",
+  'Show me all Rallycross signals': "Rallycross signals across all sources:\n• Behavior: 12% of sessions find Rallycross via search (vs. 34% for live content)\n• App Store: 3 reviews specifically mention not knowing RBTV carries Rallycross\n• X/Social: Strong positive sentiment around the sport but low RBTV brand tag correlation\n• Surveys: Not prominently mentioned by churned users — this is a discovery gap, not a quality problem\n\nConfidence: Medium. Coverage is limited on X/Social."
+};
+
+function appendMessage(role, text) {
+  const history = document.getElementById('ask-history');
+  const div = document.createElement('div');
+  div.className = `ask-msg ${role}`;
+  div.innerHTML = `<div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div><div class="msg-meta">${role==='ai'?'Prism':'You'} · just now</div>`;
+  history.appendChild(div);
+  history.scrollTop = history.scrollHeight;
+}
+
+function askQuestion(q) {
+  appendMessage('user', q);
+  setTimeout(() => {
+    const resp = aiResponses[q] || "I've analyzed the signals for that query. Based on current data for RBTV iOS v2.1, the most relevant signals point to the playback reliability cluster as the primary driver. Would you like me to break down any specific source?";
+    appendMessage('ai', resp);
+  }, 600);
+}
+
+function sendAsk() {
+  const input = document.getElementById('ask-input');
+  const q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+  askQuestion(q);
+}
+
+function handleAskKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAsk(); }
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.split-panel,.full-panel').forEach(el => el.classList.remove('active'));
+  const navMap = {fixes:0,evidence:1,heatmap:2,ask:3,briefs:4};
+  document.querySelectorAll('.nav-item')[navMap[name]].classList.add('active');
+  const panel = document.getElementById(`tab-${name}`);
+  if (panel) panel.classList.add('active');
+}
+
+buildRankList();
+selectFix(0);
+buildHeatmap();
+buildBriefs();
+</script>
+</body>
+</html>
